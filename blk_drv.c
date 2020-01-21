@@ -30,7 +30,7 @@ static int my_block_init(void)
 		
 	create_block_device(&dev);
 
-	//3#
+	//#3
 	
  return 0;	
 }module_init(my_block_init);
