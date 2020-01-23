@@ -28,7 +28,7 @@ static int my_block_init(void)
 
 	//#2===============CREATE A BLOCK DEVICE====================
 		
-	create_block_device(&dev);
+	create_block_device(&dev);//alloc_disk & add_disk
 
 	//#3
 	
@@ -59,5 +59,15 @@ static void my_block_exit(void)
 {
 	unregister_blkdev(status,My_BLKDEV_NAME);
 	//===================DELETING THE BLOCK DEVICE====================
-		del_blk_dv(&dev);
+		del_blk_dv(&dev);// 
+	/*Problem --> After a call to del_gendisk(), the 
+	 *struct gendisk structure may continue to exist (and the 
+	 *device operations may still be called) if there are still users
+	 *Example: an open operation was called on the device but 
+	 *the associated release operation has not been called*/
+	
+	/*One Solution --> keep the number of users of the device 
+	 *and call the del_gendisk() function only when there are 
+	 *no users left of the device*/
+
 }module_exit(my_block_exit);
