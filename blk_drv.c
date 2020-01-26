@@ -2,7 +2,7 @@
 #include<linux/module.h>
 #include<linux/init.h>
 #include<linux/genhd.h>
-#define MY_BLOCK_MAJOR 0
+#define MY_BLOCK_MAJOR 0 // default block number should be zero so that the kernal can allot the major number
 #define MY_BLK_MNR 1
 #define My_BLKDEV_NAME "BLOCKADE"
 
@@ -28,9 +28,9 @@ static int my_block_init(void)
 
 	//#2===============CREATE A BLOCK DEVICE====================
 		
-	create_block_device(&dev);
+	create_block_device(&dev);//alloc_disk & add_disk
 
-	//3#
+	//#3
 	
  return 0;	
 }module_init(my_block_init);
@@ -67,5 +67,15 @@ static void my_block_exit(void)
 {
 	unregister_blkdev(status,My_BLKDEV_NAME);
 	//===================DELETING THE BLOCK DEVICE====================
-		del_blk_dv(&dev);
+		del_blk_dv(&dev);// 
+	/*Problem --> After a call to del_gendisk(), the 
+	 *struct gendisk structure may continue to exist (and the 
+	 *device operations may still be called) if there are still users
+	 *Example: an open operation was called on the device but 
+	 *the associated release operation has not been called*/
+	
+	/*One Solution --> keep the number of users of the device 
+	 *and call the del_gendisk() function only when there are 
+	 *no users left of the device*/
+
 }module_exit(my_block_exit);
