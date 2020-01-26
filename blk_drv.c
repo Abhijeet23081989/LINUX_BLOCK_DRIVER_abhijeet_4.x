@@ -2,19 +2,27 @@
 #include<linux/module.h>
 #include<linux/init.h>
 #include<linux/genhd.h>
+
 #define MY_BLOCK_MAJOR 0 // default block number should be zero so that the kernal can allot the major number
 #define MY_BLK_MNR 1
 #define My_BLKDEV_NAME "BLOCKADE"
+#define NR_SECTORS 1024
 
 //++++++++++++Block device structure to store important elements describing the device+++++++++
 
 static struct my_blk_dv
 {
 	struct gendisk *gd;//struct gendisk is the basic structure in working with block devices
+	struct request_queue que;
 }dev;
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+//+++++++++++++++++++++Struct Block Device Operations++++++++++++++++++++++++++++++++++++++++++
+
+struct block_device_operations{ 
+}my_blk_fops;
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 int status;
 
 static int my_block_init(void)
@@ -43,7 +51,13 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	/***************************************/
 
 	/*******Initializing struct gendisk*****/
-
+	ptr_dev->gd->major=status
+	ptr_dev->gd->first_minor=0;
+	ptr_dev->gd->fops=&my_blk_fops;
+	ptr_dev->gd->queue=ptr_dev->que;
+	ptr_dev->gd->private_data=ptr_dev;
+	snprintf(ptr_dev->gd->disk_name,32,My_BLKDEV_NAME);//?
+	set_capacity(ptr_dev->gd,NR_SECTORS);//?
 	/***************************************/
 
 	/*********Adding Disk to the system*****/
@@ -54,6 +68,7 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	 * fully initialized and ready to respond to requests for the registered disk.*/
 	add_disk(ptr_dev->gd);
 	/***************************************/
+	return 0;
 }
 
 static int del_blk_dv(struct my_block_dv *ptr_dev)
