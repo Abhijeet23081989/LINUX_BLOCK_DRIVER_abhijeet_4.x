@@ -39,6 +39,13 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 {
 	/********Allocating Disk****************/
 	ptr_dev->gd=alloc_disk(MY_BLK_MNR);
+
+	/***************************************/
+
+	/*******Initializing struct gendisk*****/
+
+	/***************************************/
+
 	/*********Adding Disk to the system*****/
 
 	/*Note that immediately after calling the add_disk() function (actually even during the call), 
@@ -46,6 +53,7 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	 * As a result, this function SHOULD NOT BE CALLED before the driver is 
 	 * fully initialized and ready to respond to requests for the registered disk.*/
 	add_disk(ptr_dev->gd);
+	/***************************************/
 }
 
 static int del_blk_dv(struct my_block_dv *ptr_dev)
