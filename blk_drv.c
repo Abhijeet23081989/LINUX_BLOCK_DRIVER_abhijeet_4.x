@@ -6,7 +6,7 @@
 #define MY_BLOCK_MAJOR 0 // default block number should be zero so that the kernal can allot the major number
 #define MY_BLK_MNR 1
 #define My_BLKDEV_NAME "BLOCKADE"
-#define NR_SECTORS 1024
+#define NR_SECTORS 1024//?
 
 //++++++++++++Block device structure to store important elements describing the device+++++++++
 
