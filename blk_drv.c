@@ -23,7 +23,8 @@ static struct my_blk_dv
 struct block_device_operations{ 
 }my_blk_fops;
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-int status;
+int status;//status is to hold Major number and also the failed status of register_blkdev()
+int count;//everytime open operation is called count goes +1 ,finally everytime del_gendisk() is called count goes -1
 
 static int my_block_init(void)
 {
@@ -80,8 +81,10 @@ static int del_blk_dv(struct my_block_dv *ptr_dev)
 }
 static void my_block_exit(void)
 {
+	int i;
 	unregister_blkdev(status,My_BLKDEV_NAME);
 	//===================DELETING THE BLOCK DEVICE====================
+	//for(i=count;i>0;i--)
 		del_blk_dv(&dev);// 
 	/*Problem --> After a call to del_gendisk(), the 
 	 *struct gendisk structure may continue to exist (and the 
