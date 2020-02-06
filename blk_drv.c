@@ -8,12 +8,13 @@
 #define My_BLKDEV_NAME "BLOCKADE"
 #define NR_SECTORS 1024//?
 
+
 //++++++++++++Block device structure to store important elements describing the device+++++++++
 
 static struct my_blk_dv
 {
 	struct gendisk *gd;//struct gendisk is the basic structure in working with block devices
-	struct request_queue que;
+	struct request_queue *que;
 }dev;
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -22,10 +23,20 @@ static struct my_blk_dv
 
 struct block_device_operations{ 
 }my_blk_fops;
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+//*****************Declaration*********************
+
+static int create_block_device(struct my_blk_dv*);
+static int del_blk_dv(struct my_blk_dv*);
+
+//*************************************************
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 int status;//status is to hold Major number and also the failed status of register_blkdev()
 int count;//everytime open operation is called count goes +1 ,finally everytime del_gendisk() is called count goes -1
 
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 static int my_block_init(void)
 {
 	//#1================REGISTER BLOCK DRIVER====================
@@ -52,7 +63,7 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	/***************************************/
 
 	/*******Initializing struct gendisk*****/
-	ptr_dev->gd->major=status
+	ptr_dev->gd->major=status;
 	ptr_dev->gd->first_minor=0;
 	ptr_dev->gd->fops=&my_blk_fops;
 	ptr_dev->gd->queue=ptr_dev->que;
@@ -72,16 +83,16 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	return 0;
 }
 
-static int del_blk_dv(struct my_block_dv *ptr_dev)
+static int del_blk_dv(struct my_blk_dv *ptr_dev)
 {
 
 	if(ptr_dev->gd)//check first if struct gendisk exist or not
 		/*********Deallocating Disk*****************/
 		del_gendisk(ptr_dev->gd);
+	return 0;
 }
 static void my_block_exit(void)
 {
-	int i;
 	unregister_blkdev(status,My_BLKDEV_NAME);
 	//===================DELETING THE BLOCK DEVICE====================
 	//while(count--)
