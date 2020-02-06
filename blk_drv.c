@@ -84,7 +84,8 @@ static void my_block_exit(void)
 	int i;
 	unregister_blkdev(status,My_BLKDEV_NAME);
 	//===================DELETING THE BLOCK DEVICE====================
-	//for(i=count;i>0;i--)
+	//while(count--)
+		//{/*operation of removing every user who called open operation*/}
 		del_blk_dv(&dev);// 
 	/*Problem --> After a call to del_gendisk(), the 
 	 *struct gendisk structure may continue to exist (and the 
