@@ -3,7 +3,7 @@
 #include<linux/init.h>
 #include<linux/genhd.h>
 
-#define MY_BLOCK_MAJOR 0 // default block number should be zero so that the kernal can allot the major number
+#define MY_BLOCK_MAJOR 0 //default block number should be zero so that the kernal can allot the major number
 #define MY_BLK_MNR 1
 #define My_BLKDEV_NAME "BLOCKADE"
 #define NR_SECTORS 1024//?
@@ -14,7 +14,7 @@
 static struct my_blk_dv
 {
 	struct gendisk *gd;//struct gendisk is the basic structure in working with block devices
-	struct request_queue *que;
+	struct request_queue *que;//?
 }dev;
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,7 +34,7 @@ static int del_blk_dv(struct my_blk_dv*);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 int status;//status is to hold Major number and also the failed status of register_blkdev()
-int count;//everytime open operation is called count goes +1 ,finally everytime del_gendisk() is called count goes -1
+int count;//everytime open operation is called count goes +1 ,count goes -1 for every user who have called open operation and when count =0 del_gendisk() is called
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 static int my_block_init(void)
@@ -68,7 +68,7 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	ptr_dev->gd->fops=&my_blk_fops;
 	ptr_dev->gd->queue=ptr_dev->que;
 	ptr_dev->gd->private_data=ptr_dev;
-	snprintf(ptr_dev->gd->disk_name,32,My_BLKDEV_NAME);//?
+	snprintf(ptr_dev->gd->disk_name,32,"abd");//?
 	set_capacity(ptr_dev->gd,NR_SECTORS);//?
 	/***************************************/
 
