@@ -29,7 +29,7 @@ struct block_device_operations{
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 int status;//status is to hold Major number and also the failed status of register_blkdev()
-int count;//everytime open operation is called count goes +1 ,count goes -1 for every user who have called open operation and when count =0 del_gendisk() is called
+int count;//everytime open operation is called count goes +1 ,count goes -1 for every user (who called open operation) removed and when count =0 del_gendisk() is called
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -105,7 +105,7 @@ static void my_block_exit(void)
 	unregister_blkdev(status,My_BLKDEV_NAME);
 	//===================DELETING THE BLOCK DEVICE====================
 	//while(count--)
-		//{/*operation of removing every user who called open operation*/}
+		//{/*operation of removing every user who called open operation}
 		del_blk_dv(&dev);// 
 	/*Problem --> After a call to del_gendisk(), the 
 	 *struct gendisk structure may continue to exist (and the 
