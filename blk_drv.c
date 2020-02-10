@@ -24,8 +24,23 @@ static struct my_blk_dv
 //+++++++++++++++++++++Struct Block Device Operations++++++++++++++++++++++++++++++++++++++++++
 
 struct block_device_operations{ 
+	.owner=THIS_MODULE,
+	.open=open_blkdev,//open function is called from the user-space
+	.release=release_blkdev,//release function is called from the user-space
 }my_blk_fops;
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+static int open_blkdev(struct block_device *bdev, fmode_t mode)
+{
+	printk(KERN_INFO"Inside the open_blkdev()\n");
+	return 0;
+}
+
+void release_blkdev(struct gendisk *gd, fmode_t mode)
+{
+	printk(KERN_INFO"Inside the release_blkdev()\n");
+}
+/*Please notice that there are no read or write operations. These operations are performed by the request() function associated with the request queue of the disk.*/
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 int status;//status is to hold Major number and also the failed status of register_blkdev()
@@ -39,7 +54,7 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	ptr_dev->gd=alloc_disk(MY_BLK_MNR);
 	if(ptr_dev->gd){
 		printk(KERN_NOTICE"alloc_disk failed!!\n");
-		return -ENOMEM;//ENOMEM=?? and why??	
+		return -ENOMEM;//ENOMEM=out of memory	
 	}
 	/***************************************/
 
@@ -85,8 +100,6 @@ static int my_block_init(void)
 	//#2===============CREATE A BLOCK DEVICE====================
 		
 	create_block_device(&dev);//alloc_disk & add_disk
-
-	//#3
 	
  return 0;	
 }module_init(my_block_init);
@@ -104,9 +117,7 @@ static void my_block_exit(void)
 {
 	unregister_blkdev(status,My_BLKDEV_NAME);
 	//===================DELETING THE BLOCK DEVICE====================
-	//while(count--)
-		//{/*operation of removing every user who called open operation}
-		del_blk_dv(&dev);// 
+	
 	/*Problem --> After a call to del_gendisk(), the 
 	 *struct gendisk structure may continue to exist (and the 
 	 *device operations may still be called) if there are still users
@@ -117,5 +128,8 @@ static void my_block_exit(void)
 	 *and call the del_gendisk() function only when there are 
 	 *no users left of the device*/
 
+	//while(count--)
+		//{/*operation of removing every user who called open operation}
+		del_blk_dv(&dev);// 
 }module_exit(my_block_exit);
 
