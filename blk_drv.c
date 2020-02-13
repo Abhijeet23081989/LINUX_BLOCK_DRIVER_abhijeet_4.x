@@ -23,6 +23,11 @@ static struct my_blk_dv
 
 //+++++++++++++++++++++Struct Block Device Operations++++++++++++++++++++++++++++++++++++++++++
 
+/*open() and release() operations are called directly from user space by utilities that may 
+ *perform the following tasks: partitioning, file system creation, file system verification. 
+ *In a mount() operation, the open() function is called directly from the kernel space, the 
+ *file descriptor being stored by the kernel. A driver for a block device can not differentiate 
+ *between open() calls performed from user space and kernel space.*/
 struct block_device_operations{ 
 	.owner=THIS_MODULE,
 	.open=open_blkdev,//open function is called from the user-space
