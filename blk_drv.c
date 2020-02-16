@@ -134,7 +134,7 @@ static void my_block_exit(void)
 	 *no users left of the device*/
 
 	//while(count--)
-		//{/*operation of removing every user who called open operation}
+		//{/*operation of removing every user who called open operation} NB--> count can be the size of request queue
 		del_blk_dv(&dev);// 
 }module_exit(my_block_exit);
 
