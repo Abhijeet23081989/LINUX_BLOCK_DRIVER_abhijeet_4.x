@@ -16,6 +16,10 @@ static struct my_blk_dv
 {
 	spinlock_t lockdown;//spin-lock is applied for mutual exclusion (So that the block device driver can be accesssed by one user at a time)
 	struct gendisk *gd;//struct gendisk is the basic structure in working with block devices
+	//The requests are added to the queue by higher-level kernel code (for example, file systems).As long 
+	//as the request queue is not empty, the queue’s associated driver will have to retrieve the first 
+	//request from the queue and pass it to the associated block device. Each item in the request queue is 
+	//a request represented by the struct request structure.
 	struct request_queue *que;//The device request queue
 }dev;
 
@@ -134,7 +138,7 @@ static void my_block_exit(void)
 	 *no users left of the device*/
 
 	//while(count--)
-		//{/*operation of removing every user who called open operation}
+		//{/*operation of removing every user who called open operation} NB--> count can be the size of request queue
 		del_blk_dv(&dev);// 
 }module_exit(my_block_exit);
 /*Create file system after you are dome withblock driver*/
