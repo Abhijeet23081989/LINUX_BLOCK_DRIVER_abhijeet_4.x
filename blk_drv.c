@@ -39,6 +39,8 @@ struct block_device_operations{
 }my_blk_fops;
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+static void block_request(struct request_queue *q);//in this function the block request operation will be performed
+
 static int open_blkdev(struct block_device *bdev, fmode_t mode)
 {
 	printk(KERN_INFO"Inside the open_blkdev()\n");
@@ -57,24 +59,31 @@ int count;//everytime open operation is called count goes +1 ,count goes -1 for 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-static int create_block_device(struct my_blk_dv *ptr_dev)
+static int create_block_device(struct my_blk_dv *dev)
 {
 	/********Allocating Disk****************/
-	ptr_dev->gd=alloc_disk(MY_BLK_MNR);
-	if(ptr_dev->gd){
+	dev->gd=alloc_disk(MY_BLK_MNR);
+	if(dev->gd){
+		goto OUT;
 		printk(KERN_NOTICE"alloc_disk failed!!\n");
-		return -ENOMEM;//ENOMEM=out of memory	
 	}
 	/***************************************/
 
 	/*******Initializing struct gendisk*****/
-	ptr_dev->gd->major=status;
-	ptr_dev->gd->first_minor=0;
-	ptr_dev->gd->fops=&my_blk_fops;
-	ptr_dev->gd->queue=ptr_dev->que;
-	ptr_dev->gd->private_data=ptr_dev;
-	snprintf(ptr_dev->gd->disk_name,32,"abd");//?
-	set_capacity(ptr_dev->gd,NR_SECTORS);//?
+	dev->gd->major=status;
+	dev->gd->first_minor=0;
+	dev->gd->fops=&my_blk_fops;
+	dev->gd->queue=dev->que;
+	dev->gd->private_data=dev;
+	snprintf(dev->gd->disk_name,32,"abd");//?
+	set_capacity(dev->gd,NR_SECTORS);//?
+	/***************************************/
+	
+	/********Intialize I/O Queue************/
+	spin_lock_init(&dev->lockdown);
+	dev->que=blk_init_queue(block_request,&dev->lockdown);//Ist arg ==> ptr to function which processess request for device. IInd arg ==>spinlock parameter for spinlock held by kernel during the request() call for exclusive access to the queue.
+	if(dev->que ==NULL)
+		goto OUT;
 	/***************************************/
 	
 	/******************************************/
@@ -83,9 +92,11 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	 *after the request queue is allocated, using the 
 	 *blk_queue_logical_block_size() function*/
 
-	blk_queue_logical_block_size(ptr_dev->que, 512);
+	blk_queue_logical_block_size(dev->que, KERNEL_SECTOR_SIZE);
         /******************************************/
 
+	dev->que->queuedata=dev;//why?this was supposed to be saved in the private_data. see line#77
+	//queuedata field id equivalent to  private_data field
 	/*********Adding Disk to the system*****/
 
 	/*Note that immediately after calling the add_disk() function (actually even during the call), 
@@ -95,10 +106,13 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	add_disk(ptr_dev->gd);
 	/***************************************/
 	return 0;
+OUT:
+	return -ENOMEM;//ENOMEM=out of memory	
 }
 
 static int my_block_init(void)
 {
+	int stats;
 	//#1================REGISTER BLOCK DRIVER====================
 	
 	status = register_blkdev(MY_BLOCK_MAJOR,My_BLKDEV_NAME);
@@ -108,13 +122,18 @@ static int my_block_init(void)
 
 	//#2===============CREATE A BLOCK DEVICE====================
 		
-	create_block_device(&dev);//alloc_disk & add_disk
+	stats=create_block_device(&dev);//alloc_disk & add_disk.returning status of create_block_device in "stats"
+		if(stats<0)
+			return stats;
 	
  return 0;	
 }module_init(my_block_init);
 
 static int del_blk_dv(struct my_blk_dv *ptr_dev)
 {
+	/*Delete request_queue first*/
+	if(dev->que)
+		blk_cleanup_queue(dev->que);	
 
 	if(ptr_dev->gd)//check first if struct gendisk exist or not
 		/*********Deallocating Disk*****************/
@@ -139,6 +158,6 @@ static void my_block_exit(void)
 
 	//while(count--)
 		//{/*operation of removing every user who called open operation} NB--> count can be the size of request queue
-		del_blk_dv(&dev);// 
+	del_blk_dv(&dev);// 
 }module_exit(my_block_exit);
 /*Create file system after you are dome withblock driver*/
