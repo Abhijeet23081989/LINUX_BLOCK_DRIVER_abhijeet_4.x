@@ -38,8 +38,30 @@ struct block_device_operations{
 	.release=release_blkdev,//release function is called from the user-space
 }my_blk_fops;
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+static void block_request(struct request_queue *q)//in this function the block request operation will be performed.this functionruns in ATOMIC CONTEXT and must follow rules for atomic code (i.e. the function should not call any otherfunctions whici.e. the function should not call any otherfunctions which causes sleep causes sleep)
+{
+	struct request *req_ptr;
+	struct my_blk_dv *dev=q->queuedata;
+	
+	
+	while(1){//while loop is for iterating through the request queue
+	/*operation#1--> Read first request from the queue*/
+	  req_ptr=blk_fetch_request(q);//this function retrieves the first item from the request queue and starts the request.
+	  if(req_ptr==NULL)//if blk_fetch_request returns NULL, this means it has reached the end of the queue.
+		  break;
 
-static void block_request(struct request_queue *q);//in this function the block request operation will be performed
+	  if(blk_rq_is_passthrough(req_ptr)){//?
+		  printk(KERN_NOTICE"Skip non-fs request\n");
+		  __blk_end_request_all(req_ptr,-EIO);//EIO=?, why??
+		  continue;
+	  }
+
+	/*Do work*/
+	  //here request is processed according to the
+	/*.......*/
+	  __blk_end_request_all(req_ptr,0);//this function is called to complete the request entirely.If all request sectors have been processed, the __blk_end_request() function is used.
+	}	
+}
 
 static int open_blkdev(struct block_device *bdev, fmode_t mode)
 {
