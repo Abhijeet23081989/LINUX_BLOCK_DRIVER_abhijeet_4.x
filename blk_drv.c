@@ -39,7 +39,7 @@ struct block_device_operations{
 }my_blk_fops;
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-static void block_request(struct request_queue *q);//in this function the block request operation will be performed
+static void block_request(struct request_queue *q);//in this function the block request operation will be performed.this function is equivalent of write and read
 
 static int open_blkdev(struct block_device *bdev, fmode_t mode)
 {
