@@ -38,15 +38,12 @@ struct block_device_operations{
 	.release=release_blkdev,//release function is called from the user-space
 }my_blk_fops;
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-<<<<<<< HEAD
 
-static void block_request(struct request_queue *q);//in this function the block request operation will be performed.this function is equivalent of write and read
-=======
 static void block_request(struct request_queue *q)//in this function the block request operation will be performed.this functionruns in ATOMIC CONTEXT and must follow rules for atomic code (i.e. the function should not call any otherfunctions whici.e. the function should not call any otherfunctions which causes sleep causes sleep)
 {
 	struct request *req_ptr;
 	struct my_blk_dv *dev=q->queuedata;
-	
+	int req_dir=0;
 	
 	while(1){//while loop is for iterating through the request queue
 	/*operation#1--> Read first request from the queue*/
@@ -56,12 +53,21 @@ static void block_request(struct request_queue *q)//in this function the block r
 
 	  if(blk_rq_is_passthrough(req_ptr)){//?
 		  printk(KERN_NOTICE"Skip non-fs request\n");
-		  __blk_end_request_all(req_ptr,-EIO);//EIO=?, why??
+		  __blk_end_request_all(req_ptr,-EIO);//EIO=I/O Error, why??
 		  continue;
 	  }
 
 	/*Do work*/
 	  //here request is processed according to the
+	req_dir=rq_data_dir(req_ptr);//It extracts the status for cmd_flags in struct request.rq_data_dir returns 0 ==> read request & 1 ==> write request
+	if(req_dir==0)
+	{
+		/*Do read operation.how??*/
+		printk(KERN_INFO"In read Operation\n");
+	}
+	else
+		/*Do write operation.how??*/
+		printk(KERN_INFO"In write Operation\n");
 	/*.......*/
 	  __blk_end_request_all(req_ptr,0);//this function is called to complete the request entirely.If all request sectors have been processed, the __blk_end_request() function is used.
 	}	
