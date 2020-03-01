@@ -47,19 +47,22 @@ static void block_request(struct request_queue *q)//in this function the block r
 	
 	while(1){//while loop is for iterating through the request queue
 	/*operation#1--> Read first request from the queue*/
-	  req_ptr=blk_fetch_request(q);//this function retrieves the first item from the request queue and starts the request.
+	  
+	req_ptr=blk_fetch_request(q);//this function retrieves the first item from the request queue and starts the request.
 	  if(req_ptr==NULL)//if blk_fetch_request returns NULL, this means it has reached the end of the queue.
 		  break;
+	
+	  /*operation#2--> Pass request through to check if it is not from file system */
 
-	  if(blk_rq_is_passthrough(req_ptr)){//?
+	  if(blk_rq_is_passthrough(req_ptr)){//checks if request is from file system
 		  printk(KERN_NOTICE"Skip non-fs request\n");
 		  __blk_end_request_all(req_ptr,-EIO);//EIO=I/O Error, why?? --> probably because I/O Layer handles the block requests and if there is a request from user space it should be deemed as an error.
 		  continue;
 	  }
 
-	/*Do work*/
+	/*operation#3-->Process Request*/
 	  //here request is processed according to the
-	req_dir=rq_data_dir(req_ptr);//It extracts the status for cmd_flags in struct request.rq_data_dir returns 0 ==> read request & 1 ==> write request
+	req_dir=rq_data_dir(req_ptr);//It extracts the status from cmd_flags in struct request.rq_data_dir returns 0 ==> read request & 1 ==> write request
 	if(req_dir==0)
 	{
 		/*Do read operation.how??*/
