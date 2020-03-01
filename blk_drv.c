@@ -39,10 +39,10 @@ struct block_device_operations{
 }my_blk_fops;
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-static void block_request(struct request_queue *q)//in this function the block request operation will be performed.this functionruns in ATOMIC CONTEXT and must follow rules for atomic code (i.e. the function should not call any otherfunctions whici.e. the function should not call any otherfunctions which causes sleep causes sleep)
+static void block_request(struct request_queue *q)//in this function the block request operation will be performed.this function runs in ATOMIC CONTEXT and must follow rules for atomic code (i.e. the function should not call any other functions which causes sleep.)
 {
 	struct request *req_ptr;
-	struct my_blk_dv *dev=q->queuedata;
+	struct my_blk_dv *dev=q->queuedata;//who is passing 'q' to block_request?? --> by File System
 	int req_dir=0;
 	
 	while(1){//while loop is for iterating through the request queue
@@ -53,7 +53,7 @@ static void block_request(struct request_queue *q)//in this function the block r
 
 	  if(blk_rq_is_passthrough(req_ptr)){//?
 		  printk(KERN_NOTICE"Skip non-fs request\n");
-		  __blk_end_request_all(req_ptr,-EIO);//EIO=I/O Error, why??
+		  __blk_end_request_all(req_ptr,-EIO);//EIO=I/O Error, why?? --> probably because I/O Layer handles the block requests and if there is a request from user space it should be deemed as an error.
 		  continue;
 	  }
 
@@ -72,6 +72,7 @@ static void block_request(struct request_queue *q)//in this function the block r
 	  __blk_end_request_all(req_ptr,0);//this function is called to complete the request entirely.If all request sectors have been processed, the __blk_end_request() function is used.
 	}	
 }
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 static int open_blkdev(struct block_device *bdev, fmode_t mode)
 {
