@@ -1,4 +1,4 @@
-#include<linux/fs.h>
+#include<linux/fs.h>//header for register_blkdev() & unregister_blkdev()
 #include<linux/module.h>
 #include<linux/init.h>
 #include<linux/genhd.h>
@@ -7,12 +7,14 @@
 #define MY_BLK_MNR 1
 #define My_BLKDEV_NAME "BLOCKADE"
 #define NR_SECTORS 1024//?
+#define KERNEL_SECTOR_SIZE 512//?
 
 
 //++++++++++++Block device structure to store important elements describing the device+++++++++
-
+/*Struct gendisk has major and minor number both,in alloc_disk only minor number along with some other parameters are assigned but not major number*/
 static struct my_blk_dv
 {
+	spinlock_t lock;//for mutual exclusion
 	struct gendisk *gd;//struct gendisk is the basic structure in working with block devices
 	struct request_queue *que;//?
 }dev;
@@ -22,6 +24,9 @@ static struct my_blk_dv
 //+++++++++++++++++++++Struct Block Device Operations++++++++++++++++++++++++++++++++++++++++++
 
 struct block_device_operations{ 
+	.owner = THIS_MODULE,
+	.open  = my_blk_open,
+	.release = my_blk_release,
 }my_blk_fops;
 
 //*****************Declaration*********************
@@ -35,6 +40,21 @@ static int del_blk_dv(struct my_blk_dv*);
 
 int status;//status is to hold Major number and also the failed status of register_blkdev()
 int count;//everytime open operation is called count goes +1 ,count goes -1 for every user who have called open operation and when count =0 del_gendisk() is called
+//===============================================Block device open operation=========================================
+
+static int my_block_open(struct block_device *bdev, fmode_t mode){
+	printk(KERN_INFO"START BLOCK OPEN\n");
+	printk(KERN_INFO"END BLOCK OPEN\n");
+	return 0;
+}
+
+//===============================================Block device release/close operation=========================================
+static int my_block_release(struct gendisk *gd, fmode_t mode){
+	printk(KERN_INFO"START BLOCK RELEASE\n");
+	printk(KERN_INFO"END BLOCK RELEASE\n");
+	return 0;
+}
+/*No read or write operation as these operation will be performed by request functions*/
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 static int my_block_init(void)
@@ -44,11 +64,14 @@ static int my_block_init(void)
 	status = register_blkdev(MY_BLOCK_MAJOR,My_BLKDEV_NAME);
 	if(status < 0){
 		printk(KERN_ERR"Block Device not registering\n");
+		return -EBUSY;
 	}
 
 	//#2===============CREATE A BLOCK DEVICE====================
 		
-	create_block_device(&dev);//alloc_disk & add_disk
+	status=create_block_device(&dev);//alloc_disk & add_disk
+	if(status<0)
+		return status;
 
 	//#3
 	
@@ -59,6 +82,10 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 {
 	/********Allocating Disk****************/
 	ptr_dev->gd=alloc_disk(MY_BLK_MNR);
+	if(!ptr_dev->gd){
+		printk(KERN_NOTICE"alloc_disk failure\n");
+		return -ENOMEM;
+	}
 
 	/***************************************/
 
@@ -80,7 +107,7 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	 * fully initialized and ready to respond to requests for the registered disk.*/
 	add_disk(ptr_dev->gd);
 	/***************************************/
-	return 0;
+	return status;
 }
 
 static int del_blk_dv(struct my_blk_dv *ptr_dev)
@@ -96,7 +123,7 @@ static void my_block_exit(void)
 	unregister_blkdev(status,My_BLKDEV_NAME);
 	//===================DELETING THE BLOCK DEVICE====================
 	//while(count--)
-		//{/*operation of removing every user who called open operation*/}
+		//{operation of removing every user who called open operation}
 		del_blk_dv(&dev);// 
 	/*Problem --> After a call to del_gendisk(), the 
 	 *struct gendisk structure may continue to exist (and the 
