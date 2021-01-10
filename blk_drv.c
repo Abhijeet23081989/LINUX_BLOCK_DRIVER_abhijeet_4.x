@@ -48,13 +48,16 @@ static int my_block_open(struct block_device *bdev, fmode_t mode){
 	return 0;
 }
 
-//===============================================Block device release/close operation=========================================
+//===============================================Block device release/close operation=================================
 static int my_block_release(struct gendisk *gd, fmode_t mode){
 	printk(KERN_INFO"START BLOCK RELEASE\n");
 	printk(KERN_INFO"END BLOCK RELEASE\n");
 	return 0;
 }
 /*No read or write operation as these operation will be performed by request functions*/
+
+//================================================Block Request Initializatio==========================================
+static void my_block_request(struct request_queue *q);
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 static int my_block_init(void)
@@ -107,15 +110,31 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	 * fully initialized and ready to respond to requests for the registered disk.*/
 	add_disk(ptr_dev->gd);
 	/***************************************/
+
+
+	/******Initialize I/O request queue*****/
+	spin_lock_init(&ptr_dev->lock);
+	ptr_dev->que=blk_init_queue(my_blk_req,&ptr_dev->lock);
+	if(ptr_dev->que==NULL)
+		goto error;
+	blk_queue_logical_block_size(ptr_dev->que,KERNEL_SECTOR_SIZE);
+	//queuedata equivalent to private_data
+	ptr_dev->que->queuedata=ptr_dev;
+	/****************************************/
 	return status;
+error:
+	return -ENOMEM;
 }
 
 static int del_blk_dv(struct my_blk_dv *ptr_dev)
 {
 
 	if(ptr_dev->gd)//check first if struct gendisk exist or not
-		/*********Deallocating Disk*****************/
+	/*********Deallocating Disk*****************/
 		del_gendisk(ptr_dev->gd);
+	/*********Delete Request Queue*******/
+	if(ptr_dev->que)
+		blk_cleanup_queue(ptr_dev->que);
 	return 0;
 }
 static void my_block_exit(void)
