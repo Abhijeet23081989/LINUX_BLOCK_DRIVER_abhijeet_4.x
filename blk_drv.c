@@ -16,7 +16,7 @@ static struct my_blk_dv
 {
 	spinlock_t lock;//for mutual exclusion
 	struct gendisk *gd;//struct gendisk is the basic structure in working with block devices
-	struct request_queue *que;//?
+	struct request_queue *que;//Its a structure which holds a queue of struct request which is used to read and write data to block device
 }dev;
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -117,6 +117,7 @@ static int create_block_device(struct my_blk_dv *ptr_dev)
 	ptr_dev->que=blk_init_queue(my_blk_req,&ptr_dev->lock);
 	if(ptr_dev->que==NULL)
 		goto error;
+	//Inform kernel about device sector size
 	blk_queue_logical_block_size(ptr_dev->que,KERNEL_SECTOR_SIZE);
 	//queuedata equivalent to private_data
 	ptr_dev->que->queuedata=ptr_dev;
