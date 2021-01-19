@@ -57,11 +57,36 @@ static int my_block_release(struct gendisk *gd, fmode_t mode){
 /*No read or write operation as these operation will be performed by request functions*/
 
 //================================================Block Request Initializatio==========================================
-static void my_block_request(struct request_queue *q);
+static void my_block_request(struct request_queue *qu){
+	struct request *rq;
+	struct my_blk_dv *dev;
+	while(1)
+	{
+		rq=blk_fetch_request(qu);
+		if(!rq)
+			break;
+		if(blk_rq_is_passthrough(rq)){//this function checks if requests are generated from file-system or driver private requests or                                               //low level operations on disk//who will handle low level operations 
+			printk(KERN_NOTICE"NON-FS REQUEST --> SKIPPING\n");
+		      __blk_end_request_all(rq,-EIO);
+
+		}
+		/*do work with request*/
+		//1.Decide direction(Read or write)//rq_data_dir
+		//2.Get first sector//blk_rq_pos
+		//3.Get Total data length//blk_rq_bytes
+		//4.Transmit data from current struct bio.//struct bio most important
+		// ** get data size for current data transfer//blk_rq_cur_bytes
+		// ** transfer current data buffer //rq_for_each_segment --> for multiple req or bio-data --> one req. buffer
+		/**********************/
+		//1.Increment queue pointer,how?
+		//2.pass the increased pointer to request,how?
+		__blk_end_request_all(rq,0);//0--> is for error,but why??
+	}
+}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-static int my_block_init(void)
-{
+static int my_block_init(void){
+
 	//#1================REGISTER BLOCK DRIVER====================
 	
 	status = register_blkdev(MY_BLOCK_MAJOR,My_BLKDEV_NAME);
