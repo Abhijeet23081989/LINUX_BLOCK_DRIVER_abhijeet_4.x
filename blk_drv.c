@@ -41,7 +41,7 @@ static int my_block_init(void)
 {
 	//#1================REGISTER BLOCK DRIVER====================
 	
-	status = register_blkdev(MY_BLOCK_MAJOR,My_BLKDEV_NAME);
+	status = register_blkdev(MY_BLOCK_MAJOR,My_BLKDEV_NAME);//Only used for allocating major & creating entry in /proc/devices
 	if(status < 0){
 		printk(KERN_ERR"Block Device not registering\n");
 	}
@@ -96,7 +96,7 @@ static void my_block_exit(void)
 	unregister_blkdev(status,My_BLKDEV_NAME);
 	//===================DELETING THE BLOCK DEVICE====================
 	//while(count--)
-		//{/*operation of removing every user who called open operation*/}
+		/*{operation of removing every user who called open operation}*/
 		del_blk_dv(&dev);// 
 	/*Problem --> After a call to del_gendisk(), the 
 	 *struct gendisk structure may continue to exist (and the 
